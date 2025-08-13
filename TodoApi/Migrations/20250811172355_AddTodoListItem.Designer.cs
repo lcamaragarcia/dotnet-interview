@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -9,9 +10,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace TodoApi.Migrations
 {
     [DbContext(typeof(TodoContext))]
-    partial class TodoContextModelSnapshot : ModelSnapshot
+    [Migration("20250811172355_AddTodoListItem")]
+    partial class AddTodoListItem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -62,17 +65,12 @@ namespace TodoApi.Migrations
             modelBuilder.Entity("TodoApi.Models.TodoListItem", b =>
                 {
                     b.HasOne("TodoApi.Models.TodoList", "TodoList")
-                        .WithMany("TodoListItem")
+                        .WithMany()
                         .HasForeignKey("TodoListId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("TodoList");
-                });
-
-            modelBuilder.Entity("TodoApi.Models.TodoList", b =>
-                {
-                    b.Navigation("TodoListItem");
                 });
 #pragma warning restore 612, 618
         }

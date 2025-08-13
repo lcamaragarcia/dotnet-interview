@@ -7,4 +7,5 @@ public class TodoContext : DbContext
         : base(options) { }
 
     public DbSet<TodoList> TodoList { get; set; } = default!;
+    public DbSet<TodoListItem> TodoListItem { get; set; }
 }
