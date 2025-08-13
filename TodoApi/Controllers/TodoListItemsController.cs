@@ -22,7 +22,7 @@ public class TodoListItemsController : ControllerBase
         _mapper = mapper;
     }
 
-    [HttpGet("/api/todolists/{todoListId}/items")]
+    [HttpGet("/api/todolistitems/{todoListId}/items")]
     public async Task<ActionResult<IList<TodoListItem>>> GetTodoListItems(long todoListId)
     {
         try
@@ -123,7 +123,7 @@ public class TodoListItemsController : ControllerBase
         
     }
 
-    [HttpPost("/api/todolists/{todoListId}/complete-all")]
+    [HttpPost("/api/todolistitems/{todoListId}/complete-all")]
     public async Task<ActionResult> CompleteAllTodoItems(long todoListId)
     {
         try

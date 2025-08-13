@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TodoApi.Hubs;
+using TodoApi.Mappings;
 using TodoApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,7 +16,7 @@ builder.Services.AddSignalR();
 builder.Services.AddScoped<ITodoListItemService, TodoListItemService>();
 builder.Services.AddAutoMapper(cfg =>
 {    
-    cfg.AddProfile(typeof(Program));
+    cfg.AddProfile(typeof(MappingProfile));
 });
 
 builder.Logging.ClearProviders();
