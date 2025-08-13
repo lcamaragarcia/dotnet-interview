@@ -31,7 +31,7 @@ namespace TodoApi.Tests.Controllers;
         public async Task GetTodoListItem_WhenItemExists_ReturnsOkResultWithItem()
         {
             // Arrange
-            var todoListItem = new TodoListItem { Id = 1, Name = "Test Item", IsComplete = false, TodoListId = 1 };
+            var todoListItem = new TodoListItem { Id = 1, Description = "Test Item", IsComplete = false, TodoListId = 1 };
             _serviceMock.Setup(s => s.GetByIdAsync(1)).ReturnsAsync(todoListItem);
 
             // Act
@@ -77,7 +77,7 @@ namespace TodoApi.Tests.Controllers;
         public async Task PutTodoListItem_WhenIdsDoNotMatch_ReturnsBadRequest()
         {
             // Arrange
-            var payload = new UpdateTodoListItem { Id = 1, Name = "Updated Item" };
+            var payload = new UpdateTodoListItem { Id = 1, Description = "Updated Item" };
 
             // Act
             var result = await _controller.PutTodoListItem(999, payload);
@@ -91,7 +91,7 @@ namespace TodoApi.Tests.Controllers;
         public async Task PutTodoListItem_WhenItemDoesNotExist_ReturnsNotFound()
         {
             // Arrange
-            var payload = new UpdateTodoListItem { Id = 1, Name = "Updated Item" };
+            var payload = new UpdateTodoListItem { Id = 1, Description = "Updated Item" };
             _serviceMock.Setup(s => s.UpdateAsync(It.IsAny<TodoListItem>())).ReturnsAsync((TodoListItem?)null);
 
             // Act
@@ -105,8 +105,8 @@ namespace TodoApi.Tests.Controllers;
         public async Task PutTodoListItem_WhenUpdateIsSuccessful_ReturnsOkResult()
         {
             // Arrange
-            var payload = new UpdateTodoListItem { Id = 1, Name = "Updated Item", IsComplete = true };
-            var updatedItem = new TodoListItem { Id = 1, Name = "Updated Item", TodoListId = 1, IsComplete = true };
+            var payload = new UpdateTodoListItem { Id = 1, Description = "Updated Item", IsComplete = true };
+            var updatedItem = new TodoListItem { Id = 1, Description = "Updated Item", TodoListId = 1, IsComplete = true };
             _mapperMock.Setup(m => m.Map<TodoListItem>(payload)).Returns(updatedItem);
             _serviceMock.Setup(s => s.UpdateAsync(updatedItem)).ReturnsAsync(updatedItem);
 
@@ -116,15 +116,15 @@ namespace TodoApi.Tests.Controllers;
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
             var returnedItem = Assert.IsType<TodoListItem>(okResult.Value);
-            Assert.Equal(updatedItem.Name, returnedItem.Name);
+            Assert.Equal(updatedItem.Description, returnedItem.Description);
         }
 
         [Fact]
         public async Task PutTodoListItem_WhenServiceThrowsException_ReturnsStatusCode500()
         {
             // Arrange
-            var payload = new UpdateTodoListItem { Id = 1, Name = "Updated Item" };
-            _mapperMock.Setup(m => m.Map<TodoListItem>(payload)).Returns(new TodoListItem { Id = 1, Name = "Test Item" });
+            var payload = new UpdateTodoListItem { Id = 1, Description = "Updated Item" };
+            _mapperMock.Setup(m => m.Map<TodoListItem>(payload)).Returns(new TodoListItem { Id = 1, Description = "Test Item" });
             _serviceMock.Setup(s => s.UpdateAsync(It.IsAny<TodoListItem>())).ThrowsAsync(new InvalidOperationException("DB is down"));
 
             // Act
@@ -142,8 +142,8 @@ namespace TodoApi.Tests.Controllers;
         public async Task PostTodoListItem_WhenCalled_ReturnsCreatedAtAction()
         {
             // Arrange
-            var createDto = new CreateTodoListItem { Name = "New Item", TodoListId = 1 };
-            var todoListItem = new TodoListItem { Id = 3, Name = "New Item", TodoListId = 1 };
+            var createDto = new CreateTodoListItem { Description = "New Item", TodoListId = 1 };
+            var todoListItem = new TodoListItem { Id = 3, Description = "New Item", TodoListId = 1 };
             _mapperMock.Setup(m => m.Map<TodoListItem>(createDto)).Returns(todoListItem);
             _serviceMock.Setup(s => s.CreateAsync(todoListItem)).ReturnsAsync(todoListItem);
 
@@ -161,8 +161,8 @@ namespace TodoApi.Tests.Controllers;
         public async Task PostTodoListItem_WhenServiceThrowsException_ReturnsStatusCode500()
         {
             // Arrange
-            var createDto = new CreateTodoListItem { Name = "New Item" };
-            _mapperMock.Setup(m => m.Map<TodoListItem>(createDto)).Returns(new TodoListItem { Name = "New Item" });
+            var createDto = new CreateTodoListItem { Description = "New Item" };
+            _mapperMock.Setup(m => m.Map<TodoListItem>(createDto)).Returns(new TodoListItem { Description = "New Item" });
             _serviceMock.Setup(s => s.CreateAsync(It.IsAny<TodoListItem>())).ThrowsAsync(new InvalidOperationException("DB is down"));
 
             // Act

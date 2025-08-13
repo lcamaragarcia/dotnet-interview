@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Drawing.Text;
 using TodoApi.Hubs;
 using TodoApi.Models;
 
@@ -25,7 +26,7 @@ public class TodoListItemService : ITodoListItemService
     {
         try
         {
-            _logger.LogInformation("Creando un nuevo ítem en la lista {TodoListId} con nombre '{Name}'", todoListItem.TodoListId, todoListItem.Name);
+            _logger.LogInformation("Creando un nuevo ítem en la lista {TodoListId} con nombre '{Name}'", todoListItem.TodoListId, todoListItem.Description);
             _context.TodoListItem.Add(todoListItem);
             await _context.SaveChangesAsync();
             _logger.LogInformation("Ítem {Id} creado con éxito.", todoListItem.Id);
@@ -36,7 +37,7 @@ public class TodoListItemService : ITodoListItemService
             _logger.LogError(ex, "Error al crear un ítem.");
             throw;
         }            
-    }
+    }   
 
     public async Task<bool> DeleteAsync(long id)
     {
@@ -73,7 +74,7 @@ public class TodoListItemService : ITodoListItemService
             _logger.LogError(ex, "Error al buscar el ítem con id {Id}.", id);
             throw;
         }
-    }
+    }   
 
     public async Task<IList<TodoListItem>> GetByTodoListIdAsync(long todoListId)
     {            
@@ -98,7 +99,7 @@ public class TodoListItemService : ITodoListItemService
                 return null;
             }
 
-            itemToUpdate.Name = todoListItem.Name;
+            itemToUpdate.Description = todoListItem.Description;
             itemToUpdate.IsComplete = todoListItem.IsComplete;
 
             await _context.SaveChangesAsync();

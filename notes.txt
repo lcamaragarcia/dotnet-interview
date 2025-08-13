@@ -1,0 +1,45 @@
+1. High-Level Overview:
+
+The project extends the TodoList API with a synchronization mechanism. It is bidirectional, robust and resilient. The main goal is to keep consistency between local and external APIs, managing list and item creation, update and deletion in a safe and efficient way.
+
+The solution is based on a SynchronizationService which runs periodically as a background service.
+
+2. Key Design Decisions:
+
+Bidirectional Synchronization Based on Timestamps: To avoid conflicts and minimize API calls, the service uses a "pull" and "push" approach based on timestamps (LastModifiedAt, LastSyncedAt, UpdatedAt). This allows it to efficiently detect modified elements in each system.
+
+Pull: Local data is updated only when external API´s timestamp (UpdatedAt) is newer than the last local synchronization (LastSyncedAt).
+
+Push: Changes are sent to the external API only if the last local modification (LastModifiedAt) is newer than last synchronization.
+
+Separation of Concerns: The synchronizationService focuses on the synchronization business logic. It delegates local reading operations to a specific service (ITodoListService) and uses the DBContext directly for writing operations (adding/deleting) within a single transaction. This architecture keeps the code clean and ensures services are focused on a single responsibility.
+
+Batch Transactions: Database changes (additions/deletions) are grouped into a single call to _context.SaveChangesAsync() at the end of the synchronization cycle. This guarantees atomicity and improves performance by reducing database access.
+
+Background service: The synchronization process runs periodically (every 5 minutes) in a separate thread, which prevents the local API from being blocked and ensures continuous and automatic synchronization.
+
+3. Resilience and error handling
+
+Resilience policy (Polly): Polly library is used to implement a retry policy with WaitAndRetryAsync. This protects the application against temporary network or external API failures, by retrying failed calls with a delay.
+
+Error handling: The SynchronizationBackgroundService contains a try-catch block that manages loop exceptions. If an error occurs, the service logs it and waits for the next interval to retry, instead of stopping. Detailed logging is implemented for every process step (startup, data retrieval, update, creation, etc.) to help with debugging and monitoring.
+
+4. Edge Cases:
+
+Deletion of items without External Id: If a list is marked as deleted (IsDeleted = true) but never was synchronized with the external API (ExternalId == null), it just is deleted from the local database without trying a call to the external API.
+
+5. Areas for Improvement:
+
+Individual Item Synchronization: The current logic only synchronizes items when a new list is created. Updates or deletions for individual items are not handled. This logic could be implemented to achieve a more granular synchronization.
+
+Integration Testing: Add integration tests with a mocked or real instance of the external API to ensure the synchronization flow works correctly from end to end.
+
+Unit Tests for Services: The services (ITodoListService and ITodoListItemService) currently lack unit tests. Implementing tests for these services would ensure that the business logic and interactions with the DbContext function as expected, improving reliability and facilitating future refactoring.
+
+6. Additional Modifications and Assumptions:
+
+TodoListItemController Refactoring: To maintain a consistent and clean architecture, the TodoListItemController was refactored to use the new service layer (ITodoListItemService) for all its data access operations. This modification decouples the controller from the DbContext, making the code more modular and testable. Additionally, the unit tests for this controller were updated to use a mocked instance of ITodoListItemService, ensuring that the tests remain focused on the controller's logic without depending on a real database.
+
+External API Assumptions: It is assumed that Id and UpdatedAt fields from the external API always have not-null values. Null-forgiving operators (!) are used in the code to reflect this assumption and suppress compiler warnings.
+
+Additional Enhancements to the Local API: To improve the original local API, a dedicated service layer was implemented for handling data access operations. This design choice, known as Separation of Concerns, makes the code more modular, testable, and easier to maintain. Furthermore, structured logging was integrated throughout the application, providing detailed information on process flow, potential errors, and system status, which is essential for monitoring and debugging in a production environment.

@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using TodoApi.Dtos;
 using TodoApi.Models;
+using TodoApi.Services;
+using AutoMapper;
 
 namespace TodoApi.Controllers
 {
@@ -9,84 +10,119 @@ namespace TodoApi.Controllers
     [ApiController]
     public class TodoListsController : ControllerBase
     {
-        private readonly TodoContext _context;
+        private readonly ITodoListService _listService;
+        private readonly IMapper _mapper;
 
-        public TodoListsController(TodoContext context)
+        public TodoListsController(ITodoListService listService, IMapper mapper)
         {
-            _context = context;
+            _listService = listService;
+            _mapper = mapper;
         }
 
         // GET: api/todolists
         [HttpGet]
         public async Task<ActionResult<IList<TodoList>>> GetTodoLists()
         {
-            return Ok(await _context.TodoList.ToListAsync());
+            try
+            {
+                var todoLists = await _listService.GetAllAsync();
+                return Ok(todoLists);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Ocurrió un error inesperado al obtener las listas de tareas.");
+            }
         }
 
         // GET: api/todolists/5
         [HttpGet("{id}")]
         public async Task<ActionResult<TodoList>> GetTodoList(long id)
         {
-            var todoList = await _context.TodoList.FindAsync(id);
-
-            if (todoList == null)
+            try
             {
-                return NotFound();
-            }
+                var todoList = await _listService.GetByIdAsync(id);
 
-            return Ok(todoList);
+                if (todoList == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(todoList);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Ocurrió un error inesperado al obtener la lista de tareas.");
+            }
         }
 
         // PUT: api/todolists/5
-        // To protect from over-posting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<ActionResult> PutTodoList(long id, UpdateTodoList payload)
         {
-            var todoList = await _context.TodoList.FindAsync(id);
-
-            if (todoList == null)
+            try
             {
-                return NotFound();
+                var todoList = await _listService.GetByIdAsync(id);
+                if (todoList == null)
+                {
+                    return NotFound();
+                }
+
+                _mapper.Map(payload, todoList);
+                todoList.LastModifiedAt = DateTime.UtcNow;
+
+                var updatedList = await _listService.UpdateAsync(todoList);
+
+                if (updatedList == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(updatedList);
             }
-
-            todoList.Name = payload.Name;
-            await _context.SaveChangesAsync();
-
-            return Ok(todoList);
+            catch (Exception)
+            {
+                return StatusCode(500, "Ocurrió un error inesperado al actualizar la lista de tareas.");
+            }
         }
 
         // POST: api/todolists
-        // To protect from over-posting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<TodoList>> PostTodoList(CreateTodoList payload)
         {
-            var todoList = new TodoList { Name = payload.Name };
+            try
+            {
+                var todoList = _mapper.Map<TodoList>(payload);
+                todoList.LastModifiedAt = DateTime.UtcNow;
 
-            _context.TodoList.Add(todoList);
-            await _context.SaveChangesAsync();
+                var createdList = await _listService.CreateAsync(todoList);
 
-            return CreatedAtAction("GetTodoList", new { id = todoList.Id }, todoList);
+                return CreatedAtAction("GetTodoList", new { id = createdList.Id }, createdList);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Ocurrió un error inesperado al crear la lista de tareas.");
+            }
         }
 
         // DELETE: api/todolists/5
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteTodoList(long id)
         {
-            var todoList = await _context.TodoList.FindAsync(id);
-            if (todoList == null)
+            try
             {
-                return NotFound();
+                var deleted = await _listService.DeleteAsync(id);
+
+                if (!deleted)
+                {
+                    return NotFound();
+                }
+
+                return NoContent();
             }
-
-            _context.TodoList.Remove(todoList);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool TodoListExists(long id)
-        {
-            return (_context.TodoList?.Any(e => e.Id == id)).GetValueOrDefault();
+            catch (Exception)
+            {
+                return StatusCode(500, "Ocurrió un error inesperado al eliminar la lista de tareas.");
+            }
         }
     }
 }
